@@ -1,0 +1,75 @@
+server:
+  host: 0.0.0.0
+  port: 8080
+  workers: 4
+
+proxy:
+  mode: reverse  # Options: forward, reverse, socks5
+  
+  # Forward proxy settings
+  forward:
+    require_auth: true
+    allowed_domains:
+      - "*.example.com"
+      - "api.github.com"
+    
+  # Reverse proxy settings
+  reverse:
+    targets:
+      - name: api
+        host: api.example.com
+        port: 443
+        ssl: true
+        weight: 10
+      - name: web
+        host: web.example.com
+        port: 443
+        ssl: true
+        weight: 5
+    path_routing:
+      "/api": api
+      "/": web
+  
+  # SOCKS5 proxy settings
+  socks5:
+    require_auth: true
+
+security:
+  ssl:
+    enabled: true
+    cert_file: certs/server.crt
+    key_file: certs/server.key
+  
+  authentication:
+    enabled: true
+    method: basic  # Options: basic, jwt, oauth
+    users:
+      - username: admin
+        password_hash: "$2b$12$QkOjfQH5rMlUgCLOp6VzoeM.MFmWDJkeHmMCEAjjWpXjdFJitpfGS"  # hashed password
+  
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+    burst: 10
+
+caching:
+  enabled: true
+  backend: memory  # Options: memory, redis
+  ttl: 300  # seconds
+  max_size: 100  # MB
+  redis:
+    host: localhost
+    port: 6379
+    db: 0
+
+logging:
+  level: info  # Options: debug, info, warning, error, critical
+  format: json  # Options: text, json
+  output: file  # Options: console, file
+  file: logs/proxy.log
+
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    endpoint: /metrics
